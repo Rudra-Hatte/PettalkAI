@@ -1,53 +1,41 @@
 from flask import Flask, request, jsonify
-import speech_recognition as sr
-import random
-import os
+from flask_cors import CORS
+
+# Import your model or model helper functions here
+# from model import pet_to_human, human_to_pet
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS if you're connecting from a frontend
 
-# Example "translation" map from barks to meanings
-pet_intents = {
-    "bark": [
-        "I'm excited!",
-        "Someone's at the door!",
-        "Let's play!",
-        "I need food."
-    ],
-    "meow": [
-        "Feed me now!",
-        "Where have you been?",
-        "Pet me!",
-        "I'm bored."
-    ]
-}
+@app.route('/')
+def home():
+    return jsonify({'message': 'Welcome to PettalkAI Backend!'})
 
-@app.route('/api/pet-talk', methods=['POST'])
-def pet_talk():
-    if 'audio' not in request.files:
-        return jsonify({'error': 'No audio file uploaded'}), 400
+@app.route('/translate/pet-to-human', methods=['POST'])
+def translate_pet_to_human():
+    data = request.json
+    pet_message = data.get('pet_message', '')
+    if not pet_message:
+        return jsonify({'error': 'pet_message is required'}), 400
 
-    audio_file = request.files['audio']
-    audio_path = os.path.join("temp_audio.wav")
-    audio_file.save(audio_path)
+    # Placeholder: Replace this with your model inference
+    # human_translation = pet_to_human(pet_message)
+    human_translation = f"Translated pet message: {pet_message}"  # Dummy
 
-    recognizer = sr.Recognizer()
-    with sr.AudioFile(audio_path) as source:
-        audio = recognizer.record(source)
+    return jsonify({'human_message': human_translation})
 
-    try:
-        detected_word = recognizer.recognize_google(audio)
-        print("Detected:", detected_word)
-        if "bark" in detected_word.lower():
-            reply = random.choice(pet_intents["bark"])
-        elif "meow" in detected_word.lower():
-            reply = random.choice(pet_intents["meow"])
-        else:
-            reply = "Hmm... I didn't understand that sound."
-    except Exception as e:
-        reply = f"Error processing audio: {str(e)}"
+@app.route('/translate/human-to-pet', methods=['POST'])
+def translate_human_to_pet():
+    data = request.json
+    human_message = data.get('human_message', '')
+    if not human_message:
+        return jsonify({'error': 'human_message is required'}), 400
 
-    os.remove(audio_path)
-    return jsonify({'reply': reply})
+    # Placeholder: Replace this with your model inference
+    # pet_translation = human_to_pet(human_message)
+    pet_translation = f"Translated human message: {human_message}"  # Dummy
+
+    return jsonify({'pet_message': pet_translation})
 
 if __name__ == '__main__':
     app.run(debug=True)
